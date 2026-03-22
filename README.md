@@ -65,7 +65,7 @@ A aplicação é composta por dois serviços:
 
 ---
 
-## 🔑 Credenciais
+## Credenciais
 
 ### RabbitMQ
 - Usuário: guest  
