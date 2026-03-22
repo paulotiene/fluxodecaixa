@@ -74,7 +74,7 @@ A aplicação é composta por dois serviços:
 ### SQL Server
 - Servidor: localhost,1433  
 - Usuário: sa  
-- Senha: admin  
+- Senha: Admin#123  
 
 ---
 
