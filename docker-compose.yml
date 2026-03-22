@@ -1,0 +1,92 @@
+version: "3.9"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: fluxodecaixa-sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Admin#123"
+    ports:
+      - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Admin#123' -Q 'SELECT 1' -C || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: fluxodecaixa-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  lancamentos-api:
+    build:
+      context: .
+      dockerfile: src/Services/Lancamentos/Lancamentos.Api/Dockerfile
+    container_name: fluxodecaixa-lancamentos-api
+    restart: unless-stopped
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=FluxoDeCaixaLancamentosDb;User Id=sa;Password=Admin#123;TrustServerCertificate=True;Encrypt=False;Connection Timeout=30"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: "guest"
+      RabbitMq__Password: "guest"
+      RabbitMq__QueueName: "fluxodecaixa.lancamentos.criados"
+      RabbitMq__RoutingKey: "lancamento.criado"
+      RabbitMq__ExchangeName: ""
+      RabbitMq__Durable: "true"
+      Jwt__Issuer: "FluxoDeCaixa.Auth"
+      Jwt__Audience: "FluxoDeCaixa.Api"
+      Jwt__Key: "uma-chave-super-secreta-com-pelo-menos-32-caracteres"
+      Jwt__ExpirationMinutes: "60"
+    ports:
+      - "8081:8080"
+
+  consolidado-api:
+    build:
+      context: .
+      dockerfile: src/Services/Consolidado/Consolidado.Api/Dockerfile
+    container_name: fluxodecaixa-consolidado-api
+    restart: unless-stopped
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=FluxoDeCaixaConsolidadoDb;User Id=sa;Password=Admin#123;TrustServerCertificate=True;Encrypt=False;Connection Timeout=30"
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: "guest"
+      RabbitMq__Password: "guest"
+      RabbitMq__QueueName: "fluxodecaixa.lancamentos.criados"
+      RabbitMq__RoutingKey: "lancamento.criado"
+      RabbitMq__ExchangeName: ""
+      RabbitMq__Durable: "true"
+      Jwt__Issuer: "FluxoDeCaixa.Auth"
+      Jwt__Audience: "FluxoDeCaixa.Api"
+      Jwt__Key: "uma-chave-super-secreta-com-pelo-menos-32-caracteres"
+      Jwt__ExpirationMinutes: "60"
+    ports:
+      - "8082:8080"

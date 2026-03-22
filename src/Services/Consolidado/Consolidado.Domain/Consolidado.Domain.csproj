@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Consolidado.Domain</RootNamespace>
+    <AssemblyName>Consolidado.Domain</AssemblyName>
+  </PropertyGroup>
+</Project>
