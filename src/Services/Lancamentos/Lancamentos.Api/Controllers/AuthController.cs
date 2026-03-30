@@ -27,9 +27,8 @@ public sealed class AuthController : ControllerBase
     [HttpPost("token")]
     public IActionResult Token([FromBody] AuthTokenRequest request)
     {
-        // Demo simples para o desafio
         if (request.UserName != "admin" || request.Password != "123456")
-            return Unauthorized(new { message = "Usu·rio ou senha inv·lidos." });
+            return Unauthorized(new { message = "Usu√°rio ou senha inv√°lidos." });
 
         var token = _jwtTokenGenerator.GenerateToken(request.UserName, "Admin");
 
